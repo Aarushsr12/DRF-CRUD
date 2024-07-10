@@ -24,10 +24,32 @@ def add_items(request):
 
     #if already existing
     if Item.objects.filter(**request.data).exists():
-        return serializers.ValidationError('already exists')
+        raise serializers.ValidationError('already exists')
 
     if item.is_valid():
         item.save()
         return Response(item.data)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])    
+def get_items(request):
+    if request.query_params:
+        items = Item.objects.filter(**request.query_params.dict())
+    else:
+        items = Item.objects.all()
+
+    if items:
+        serializer = ItemSerializer(items, many=True)
+        return Response(serializer.data)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+        
+@api_view(['DELETE'])
+def delete_item(request,pk):
+    item = Item.objects.get(id = pk)
+    item.delete()
+
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
